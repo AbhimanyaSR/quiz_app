@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 class QuestionsScreen extends StatefulWidget {
@@ -14,21 +15,51 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
   int currentQuestionIndex = 0;
   int score = 0;
   bool isAnswerSelected = false;
-  bool isAnswerCorrect = false;
+  Timer? questionTimer; // Timer for each question
+  double timeLeft = 5.0; // 5 seconds for each question
+
+  @override
+  void initState() {
+    super.initState();
+    startTimer();
+  }
+
+  @override
+  void dispose() {
+    questionTimer?.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
+  }
+
+  void startTimer() {
+    // Reset the timer and start counting down
+    timeLeft = 5.0;
+    questionTimer?.cancel(); // Cancel any previous timer
+    questionTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      setState(() {
+        if (timeLeft > 0) {
+          timeLeft -= 0.1; // Decrease time by 0.1 seconds
+        } else {
+          timer.cancel();
+          nextQuestion(); // Automatically move to the next question
+        }
+      });
+    });
+  }
 
   void checkAnswer(int selectedOption) {
-    setState(() {
-      isAnswerSelected = true;
-      int correctAnswerIndex =
-          widget.Questionlist[currentQuestionIndex]['answer'];
+    if (!isAnswerSelected) {
+      setState(() {
+        isAnswerSelected = true;
+        int correctAnswerIndex =
+            widget.Questionlist[currentQuestionIndex]['answer'];
 
-      if (selectedOption == correctAnswerIndex) {
-        score++; // Increase score if correct
-        isAnswerCorrect = true;
-      } else {
-        isAnswerCorrect = false;
-      }
-    });
+        if (selectedOption == correctAnswerIndex) {
+          score++; // Increase score if correct
+        }
+
+        questionTimer?.cancel(); // Stop the timer when an answer is selected
+      });
+    }
   }
 
   void nextQuestion() {
@@ -36,14 +67,15 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
       isAnswerSelected = false;
       if (currentQuestionIndex < widget.Questionlist.length - 1) {
         currentQuestionIndex++;
+        startTimer(); // Start the timer for the next question
       } else {
-        // Show the result if all questions are answered
         showResult();
       }
     });
   }
 
   void showResult() {
+    questionTimer?.cancel(); // Stop the timer when quiz ends
     showDialog(
       context: context,
       builder: (context) {
@@ -54,7 +86,7 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                Navigator.pop(context); // Go back to CategoryPage
+                Navigator.pop(context);
               },
               child: const Text("OK"),
             ),
@@ -85,16 +117,24 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
               style: const TextStyle(fontSize: 24),
             ),
             const SizedBox(height: 20),
+            LinearProgressIndicator(
+              value: timeLeft / 5.0, // Fraction of time remaining
+              backgroundColor: Colors.grey[300],
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Time left: ${timeLeft.toStringAsFixed(1)} seconds',
+              style: const TextStyle(fontSize: 18, color: Colors.red),
+            ),
+            const SizedBox(height: 20),
             for (int i = 0; i < options.length; i++)
               GestureDetector(
-                onTap: () {
-                  if (!isAnswerSelected) {
-                    checkAnswer(i);
-                  }
-                },
+                onTap: () => checkAnswer(i),
                 child: Container(
                   margin: const EdgeInsets.symmetric(vertical: 8),
                   padding: const EdgeInsets.all(16),
+                  height: 60, // Set a fixed height for all boxes
                   decoration: BoxDecoration(
                     color: isAnswerSelected
                         ? (i ==
@@ -105,9 +145,12 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
                         : Colors.blue,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    options[i],
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                  child: Center(
+                    child: Text(
+                      options[i],
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),

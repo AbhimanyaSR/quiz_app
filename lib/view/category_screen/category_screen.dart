@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:quiz_app/dummy_db.dart'; // Assuming this contains the Dummydb class
-import 'package:quiz_app/model/category_item.dart'; // Model for CategoryItem
-import 'package:quiz_app/view/category_screen/widgets/category_card.dart'; // Custom CategoryCard widget
-import 'package:quiz_app/view/question_screen/question_screen.dart'; // Question screen that will show quiz questions
+import 'package:quiz_app/dummy_db.dart';
+import 'package:quiz_app/model/category_item.dart';
+import 'package:quiz_app/view/category_screen/widgets/category_card.dart';
+import 'package:quiz_app/view/question_screen/question_screen.dart';
 
 class CategoryPage extends StatelessWidget {
   final List<CategoryItem> categories = [
@@ -30,7 +30,7 @@ class CategoryPage extends StatelessWidget {
     CategoryItem(
       title: "General Knowledge",
       iconUrl: "https://cdn-icons-png.flaticon.com/128/13565/13565345.png",
-      questionList: Dummydb.gklist, // General Knowledge questions
+      questionList: Dummydb.gklist, // GK questions
     ),
   ];
 
@@ -61,8 +61,7 @@ class CategoryPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => QuestionsScreen(
-                        Questionlist: category
-                            .questionList!, // Force unwrap since it's guaranteed to be non-null here
+                        Questionlist: category.questionList!,
                       ),
                     ),
                   );
